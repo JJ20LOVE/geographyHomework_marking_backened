@@ -1,0 +1,27 @@
+server:
+  AppMode: "release"
+  HttpPort: ":3000"
+  JwtKey: "your key"
+
+database:
+  Db: "mysql"
+  DbHost: "122.51.185.92"
+  DbPort: 3306
+  DbUser: "root"
+  DbPassWord: "ding060803"
+  Dbname: "geollm"
+  MaxOpenConns: 20
+  MaxIdleConns: 10
+
+ocr:
+  OcrApi: "your api"
+
+eva:
+  EvaApi: "your api"
+
+minio:
+  Endpoint: "127.0.0.1:9000"
+  AccessKeyID: "minioadmin"
+  SecretAccessKey: "2005326mzy"
+  RawQuality: 50
+  ThumbnailQuality: 10
