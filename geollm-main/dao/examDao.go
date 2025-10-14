@@ -50,30 +50,46 @@ func GetAllExam() ([]model.ExamN, int) {
 func GetExamDetail(exam_id int) (model.YiTuo, int) {
 	code := CheckExamID(exam_id)
 	if code != 200 {
+		fmt.Printf("CheckExamID failed: %d\n", code)
 		return model.YiTuo{}, code
 	}
+
+	// 添加调试信息
+	fmt.Printf("Getting exam detail for exam_id: %d\n", exam_id)
+
 	var exam model.ExamDetail
 	exam.ExamID = exam_id
-	err := model.Db.Select(&exam.QDetail, "SELECT qid,point,tihao FROM exam_detail WHERE exam_id=?", exam_id)
+
+	// 先检查 exam_detail 表数据
+	var detailCount int
+	err := model.Db.Get(&detailCount, "SELECT COUNT(*) FROM exam_detail WHERE exam_id=?", exam_id)
 	if err != nil {
+		fmt.Printf("Error counting exam_detail: %v\n", err)
 		return model.YiTuo{}, 400
 	}
-	sqlStr := "select answer from exam_answer where exam_id = ?"
-	var answer string
-	err = model.Db.Get(&answer, sqlStr, exam_id)
+	fmt.Printf("Found %d records in exam_detail for exam_id: %d\n", detailCount, exam_id)
+
+	err = model.Db.Select(&exam.QDetail, "SELECT qid, point, tihao FROM exam_detail WHERE exam_id=?", exam_id)
 	if err != nil {
+		fmt.Printf("Error querying exam_detail: %v\n", err)
 		return model.YiTuo{}, 400
 	}
-	sqlStr = "select question from exam_question where exam_id = ?"
-	var question string
-	err = model.Db.Get(&question, sqlStr, exam_id)
-	if err != nil {
-		return model.YiTuo{}, 400
-	}
+	fmt.Printf("Successfully loaded %d question details\n", len(exam.QDetail))
+
+	// 检查其他相关表
+	var questionCount, answerCount int
+	model.Db.Get(&questionCount, "SELECT COUNT(*) FROM exam_question WHERE exam_id=?", exam_id)
+	model.Db.Get(&answerCount, "SELECT COUNT(*) FROM exam_answer WHERE exam_id=?", exam_id)
+	fmt.Printf("Question records: %d, Answer records: %d\n", questionCount, answerCount)
+
 	exam.Answer, exam.Question, code = Unmarshaler(exam_id)
 	if code != 200 {
+		fmt.Printf("Unmarshaler failed with code: %d\n", code)
 		return model.YiTuo{}, code
 	}
+
+	fmt.Printf("Successfully unmarshaled %d answer sections and %d question sections\n",
+		len(exam.Answer), len(exam.Question))
 	var data model.YiTuo
 	data.ExamID = exam_id
 	for i := 0; i < len(exam.Question); i++ {

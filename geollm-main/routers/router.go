@@ -4,6 +4,7 @@ import (
 	"dbdemo/api"
 	"dbdemo/middleware"
 	"dbdemo/utils"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -77,6 +78,21 @@ func InitRouter() {
 		xg.GET("/getNameList", api.GetNameList)
 		xg.GET("/getExamData", api.GetExamData)
 		xg.GET("/solo", api.SOLO)
+	}
+
+	//错题本相关路由
+	wg := auth.Group("/wrongbook")
+	{
+		wg.POST("/addWrongQuestion", api.AddWrongQuestion)
+		wg.GET("/getByStudent", api.GetWrongQuestionsByStudent)
+		wg.DELETE("/deleteWrongQuestion", api.DeleteWrongQuestion)
+	}
+
+	//推荐系统相关路由
+	rg := auth.Group("/recommendation")
+	{
+		rg.GET("/getSimilarQuestions", api.GetSimilarQuestions)
+		rg.POST("/feedback", api.AddRecommendationFeedback)
 	}
 
 	var HttpPort string

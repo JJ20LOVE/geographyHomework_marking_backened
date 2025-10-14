@@ -5,10 +5,10 @@ server:
 
 database:
   Db: "mysql"
-  DbHost: "122.51.185.92"
+  DbHost: "localhost"
   DbPort: 3306
   DbUser: "root"
-  DbPassWord: "ding060803"
+  DbPassWord: "root"
   Dbname: "geollm"
   MaxOpenConns: 20
   MaxIdleConns: 10
@@ -22,6 +22,7 @@ eva:
 minio:
   Endpoint: "127.0.0.1:9000"
   AccessKeyID: "minioadmin"
-  SecretAccessKey: "2005326mzy"
+  SecretAccessKey: "minioadmin"
   RawQuality: 50
   ThumbnailQuality: 10
+  UseSSL: false

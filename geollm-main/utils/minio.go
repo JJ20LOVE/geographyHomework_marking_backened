@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/nfnt/resize"
 	"image"
 	"image/jpeg"
 	"io"
@@ -14,6 +12,9 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/nfnt/resize"
 )
 import "github.com/minio/minio-go/v7"
 
@@ -24,7 +25,7 @@ func InitMinIO() {
 	// Initialize minio client object.
 	MinioClient, err = minio.New(Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(AccessKeyID, SecretAccessKey, ""),
-		Secure: true,
+		Secure: false,
 	})
 	if err != nil {
 		log.Fatalln(err)
