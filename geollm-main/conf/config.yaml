@@ -14,7 +14,11 @@ database:
   MaxIdleConns: 10
 
 ocr:
-  OcrApi: "your api"
+  Provider: "aliyun"  # 服务商：aliyun, baidu, tencent 等
+  AliyunAccessKeyId: "204942406"
+  AliyunAccessKeySecret: "ZJyrXX0cFcCgXtWe5FGcyI4ff5m2oPpp"
+  AliyunRegion: "cn-shanghai"  # 根据你的服务区域修改
+  Timeout: 30
 
 eva:
   EvaApi: "your api"
@@ -26,3 +30,14 @@ minio:
   RawQuality: 50
   ThumbnailQuality: 10
   UseSSL: false
+
+
+  # 新增AI配置
+ai:
+  provider: "deepseek"
+  model: "deepseek-chat"
+  max_tokens: 2000
+  temperature: 0.7
+  deepseek:
+     api_key: "your_API_key"  # 替换为你的实际API Key
+     base_url: "https://api.deepseek.com"

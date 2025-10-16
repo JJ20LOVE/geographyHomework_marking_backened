@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"dbdemo/model"
+	"dbdemo/utils"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,17 +12,21 @@ import (
 )
 
 type AIService struct {
-	APIKey  string
-	BaseURL string
-	Client  *http.Client
+	APIKey      string
+	BaseURL     string
+	Model       string
+	MaxTokens   int
+	Temperature float64
+	Client      *http.Client
 }
 
-// AI请求结构
+// AI请求结构 - 适配DeepSeek API
 type AIRequest struct {
 	Model       string    `json:"model"`
 	Messages    []Message `json:"messages"`
 	MaxTokens   int       `json:"max_tokens"`
 	Temperature float64   `json:"temperature"`
+	Stream      bool      `json:"stream"`
 }
 
 type Message struct {
@@ -29,62 +34,92 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-// AI响应结构
+// AI响应结构 - 适配DeepSeek API
 type AIResponse struct {
+	ID      string   `json:"id"`
 	Choices []Choice `json:"choices"`
-	Error   *AIError `json:"error"`
+	Usage   Usage    `json:"usage"`
+	Error   *AIError `json:"error,omitempty"`
 }
 
 type Choice struct {
-	Message Message `json:"message"`
+	Index        int     `json:"index"`
+	Message      Message `json:"message"`
+	FinishReason string  `json:"finish_reason"`
+}
+
+type Usage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
 }
 
 type AIError struct {
 	Message string `json:"message"`
 	Type    string `json:"type"`
+	Code    string `json:"code,omitempty"`
 }
 
-func NewAIService(apiKey, baseURL string) *AIService {
+func NewAIService(apiKey, baseURL, model string, maxTokens int, temperature float64) *AIService {
 	return &AIService{
-		APIKey:  apiKey,
-		BaseURL: baseURL,
+		APIKey:      apiKey,
+		BaseURL:     baseURL,
+		Model:       model,
+		MaxTokens:   maxTokens,
+		Temperature: temperature,
 		Client: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 60 * time.Second, // 增加超时时间
 		},
 	}
 }
 
-// GetSimilarQuestions 调用AI API获取同类题目推荐
+// NewDefaultAIService 使用配置的默认值创建AI服务
+func NewDefaultAIService() *AIService {
+	return NewAIService(
+		utils.DeepSeekApiKey,
+		utils.DeepSeekBaseUrl,
+		utils.AIModel,
+		utils.AIMaxTokens,
+		utils.AITemperature,
+	)
+}
+
+// GetSimilarQuestions 调用DeepSeek API获取同类题目推荐
 func (s *AIService) GetSimilarQuestions(questionText, knowledgePoint string, limit int) ([]model.SimilarQuestion, error) {
 	if s.APIKey == "" {
 		// 如果没有配置API Key，返回模拟数据
+		fmt.Println("DeepSeek API Key未配置，使用模拟数据")
 		return s.getMockSimilarQuestions(questionText, knowledgePoint, limit)
 	}
 
-	prompt := fmt.Sprintf(`请根据以下地理题目推荐%d道同类题目：
+	prompt := fmt.Sprintf(`你是一个地理学科教育专家，请根据以下地理题目推荐%d道同类题目：
 
 原题目：%s
 知识点：%s
 
 要求：
-1. 题目类型和难度与原题相似
-2. 围绕相同的知识点
-3. 返回JSON格式，包含question_id, question_text, knowledge_point, difficulty字段
-4. question_id从1001开始递增
-5. difficulty可以是"简单"、"中等"、"困难"
+1. 题目类型和难度与原题相似，都是地理主观题
+2. 围绕相同的知识点或相关地理概念
+3. 返回格式必须是纯JSON数组，不要有任何其他文字
+4. JSON数组包含%d个对象，每个对象包含以下字段：
+   - question_id: 从1001开始递增的数字
+   - question_text: 题目内容
+   - knowledge_point: 知识点
+   - difficulty: 难度级别，只能是"简单"、"中等"、"困难"之一
 
-请直接返回JSON数组，不要其他解释：`, limit, questionText, knowledgePoint)
+请确保返回的是纯JSON格式，不要有任何markdown标记或额外解释：`, limit, questionText, knowledgePoint, limit)
 
 	aiReq := AIRequest{
-		Model: "deepseek-chat", // 或其他模型
+		Model: s.Model,
 		Messages: []Message{
 			{
 				Role:    "user",
 				Content: prompt,
 			},
 		},
-		MaxTokens:   2000,
-		Temperature: 0.7,
+		MaxTokens:   s.MaxTokens,
+		Temperature: s.Temperature,
+		Stream:      false,
 	}
 
 	jsonData, err := json.Marshal(aiReq)
@@ -99,9 +134,13 @@ func (s *AIService) GetSimilarQuestions(questionText, knowledgePoint string, lim
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+s.APIKey)
+	req.Header.Set("Accept", "application/json")
+
+	fmt.Printf("调用DeepSeek API，模型: %s\n", s.Model)
 
 	resp, err := s.Client.Do(req)
 	if err != nil {
+		fmt.Printf("API请求失败: %v\n", err)
 		return nil, fmt.Errorf("API请求失败: %v", err)
 	}
 	defer resp.Body.Close()
@@ -112,15 +151,18 @@ func (s *AIService) GetSimilarQuestions(questionText, knowledgePoint string, lim
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("API返回错误状态码: %d, 响应: %s\n", resp.StatusCode, string(body))
 		return nil, fmt.Errorf("API返回错误: %s", string(body))
 	}
 
 	var aiResp AIResponse
 	if err := json.Unmarshal(body, &aiResp); err != nil {
+		fmt.Printf("解析响应失败: %v, 原始响应: %s\n", err, string(body))
 		return nil, fmt.Errorf("解析响应失败: %v", err)
 	}
 
 	if aiResp.Error != nil {
+		fmt.Printf("AI服务错误: %s (类型: %s)\n", aiResp.Error.Message, aiResp.Error.Type)
 		return nil, fmt.Errorf("AI服务错误: %s", aiResp.Error.Message)
 	}
 
@@ -132,33 +174,56 @@ func (s *AIService) GetSimilarQuestions(questionText, knowledgePoint string, lim
 	var similarQuestions []model.SimilarQuestion
 	content := aiResp.Choices[0].Message.Content
 
-	// 清理可能的markdown代码块
+	// 清理可能的markdown代码块和非JSON内容
 	cleanContent := s.cleanJSONResponse(content)
 
+	fmt.Printf("AI返回内容: %s\n", cleanContent)
+
 	if err := json.Unmarshal([]byte(cleanContent), &similarQuestions); err != nil {
-		// 如果解析失败，返回模拟数据
-		fmt.Printf("AI响应解析失败，使用模拟数据: %v\n", err)
+		fmt.Printf("AI响应JSON解析失败: %v，使用模拟数据\n", err)
 		return s.getMockSimilarQuestions(questionText, knowledgePoint, limit)
 	}
 
+	// 验证返回的数据结构
+	if len(similarQuestions) == 0 {
+		fmt.Printf("AI返回空数组，使用模拟数据\n")
+		return s.getMockSimilarQuestions(questionText, knowledgePoint, limit)
+	}
+
+	fmt.Printf("成功获取 %d 道同类题目\n", len(similarQuestions))
 	return similarQuestions, nil
 }
 
 // cleanJSONResponse 清理AI返回的JSON响应
 func (s *AIService) cleanJSONResponse(content string) string {
-	// 移除可能的markdown代码块标记
+	// 移除可能的markdown代码块标记和其他非JSON内容
 	cleaned := content
+
+	// 移除 ```json 和 ``` 标记
 	if len(cleaned) >= 7 && cleaned[:7] == "```json" {
 		cleaned = cleaned[7:]
 	}
 	if len(cleaned) >= 3 && cleaned[len(cleaned)-3:] == "```" {
 		cleaned = cleaned[:len(cleaned)-3]
 	}
+
+	// 移除开头的换行和空格
+	for len(cleaned) > 0 && (cleaned[0] == '\n' || cleaned[0] == ' ' || cleaned[0] == '\r') {
+		cleaned = cleaned[1:]
+	}
+
+	// 移除结尾的换行和空格
+	for len(cleaned) > 0 && (cleaned[len(cleaned)-1] == '\n' || cleaned[len(cleaned)-1] == ' ' || cleaned[len(cleaned)-1] == '\r') {
+		cleaned = cleaned[:len(cleaned)-1]
+	}
+
 	return cleaned
 }
 
 // getMockSimilarQuestions 返回模拟的相似题目（用于测试或API不可用时）
 func (s *AIService) getMockSimilarQuestions(questionText, knowledgePoint string, limit int) ([]model.SimilarQuestion, error) {
+	fmt.Printf("使用模拟数据，原题: %s, 知识点: %s\n", questionText, knowledgePoint)
+
 	mockQuestions := []model.SimilarQuestion{
 		{
 			QuestionID:     1001,

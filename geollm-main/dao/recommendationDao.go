@@ -3,21 +3,18 @@ package dao
 import (
 	"dbdemo/model"
 	"dbdemo/service"
+	"dbdemo/utils"
 	"fmt"
-	"os"
 )
 
 var aiService *service.AIService
 
 func init() {
-	// 从环境变量或配置文件中获取API配置
-	apiKey := os.Getenv("DEEPSEEK_API_KEY")
-	baseURL := os.Getenv("DEEPSEEK_API_BASE_URL")
-	if baseURL == "" {
-		baseURL = "https://api.deepseek.com" // 默认URL
-	}
+	// 使用新的配置方式创建AI服务
+	aiService = service.NewDefaultAIService()
 
-	aiService = service.NewAIService(apiKey, baseURL)
+	// 如果默认服务创建失败（比如没有API Key），会回退到模拟数据模式
+	fmt.Printf("AI服务初始化完成: Provider=%s\n", utils.AIProvider)
 }
 
 // 获取同类题

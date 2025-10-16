@@ -69,7 +69,7 @@ func GetExamDetail(exam_id int) (model.YiTuo, int) {
 	}
 	fmt.Printf("Found %d records in exam_detail for exam_id: %d\n", detailCount, exam_id)
 
-	err = model.Db.Select(&exam.QDetail, "SELECT qid, point, tihao FROM exam_detail WHERE exam_id=?", exam_id)
+	err = model.Db.Select(&exam.QDetail, "SELECT qid, point, COALESCE(tihao, '') as tihao FROM exam_detail WHERE exam_id=?", exam_id)
 	if err != nil {
 		fmt.Printf("Error querying exam_detail: %v\n", err)
 		return model.YiTuo{}, 400
