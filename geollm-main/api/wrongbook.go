@@ -5,6 +5,7 @@ import (
 	"dbdemo/model"
 	"dbdemo/utils"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -61,6 +62,24 @@ func GetWrongQuestionsByStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"data": wrongQuestions,
+		"msg":  "success",
+	})
+}
+
+func GetWrongQuestionByID(c *gin.Context) {
+	var wq model.WrongQuestion
+	wrongID, _ := strconv.Atoi(c.Query("wrong_id"))
+	wq, code := dao.GetWrongQuestionByID(wrongID)
+	if code != 200 {
+		c.JSON(http.StatusOK, gin.H{
+			"code": code,
+			"msg":  utils.GetErrMsg(code),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": wq,
 		"msg":  "success",
 	})
 }

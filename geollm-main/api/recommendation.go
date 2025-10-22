@@ -11,10 +11,10 @@ import (
 )
 
 func GetSimilarQuestions(c *gin.Context) {
-	wrongID := c.Query("wrong_id")
+	wrongID, _ := strconv.Atoi(c.Query("wrong_id"))
 	limitStr := c.Query("limit")
 
-	if wrongID == "" {
+	if wrongID == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 300,
 			"msg":  "wrong_id is required",

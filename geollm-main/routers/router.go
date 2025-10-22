@@ -35,6 +35,7 @@ func InitRouter() {
 		sg.POST("/addStudent", api.AddStudent)
 		sg.PUT("/updateStudent", api.UpdateStudent)
 		sg.GET("/getStudentByClass", api.GetStudentByClass)
+		sg.GET("/getStudentById", api.GetStudentById)
 	}
 
 	ag := auth.Group("/answersheet")
@@ -86,6 +87,7 @@ func InitRouter() {
 		wg.POST("/addWrongQuestion", api.AddWrongQuestion)
 		wg.GET("/getByStudent", api.GetWrongQuestionsByStudent)
 		wg.DELETE("/deleteWrongQuestion", api.DeleteWrongQuestion)
+		wg.GET("/getById", api.GetWrongQuestionByID)
 	}
 
 	//推荐系统相关路由
