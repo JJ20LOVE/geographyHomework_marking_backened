@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	utils.InitConfig()
 	model.InitDb()
 	utils.InitMinIO()
 	api.InitWorker()

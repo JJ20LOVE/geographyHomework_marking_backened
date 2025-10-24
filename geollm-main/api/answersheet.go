@@ -4,11 +4,12 @@ import (
 	"dbdemo/dao"
 	"dbdemo/model"
 	"dbdemo/utils"
-	"github.com/gin-gonic/gin"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"sync"
+
+	"github.com/gin-gonic/gin"
 )
 
 var ocrQueue = make(chan ocrRequest, 10) // 定义一个有缓冲的 channel 来限制并发量
@@ -111,6 +112,18 @@ func CreateAnswerSheet(c *gin.Context) {
 		return
 	}
 
+	// 先上传文件
+	err = utils.UploadFiles(files, aid)
+	if err != nil {
+		dao.DeleteAnswerSheet(aid) // 上传失败，删除已创建的答题卡
+		c.JSON(http.StatusOK, gin.H{
+			"code": 203,
+			"msg":  utils.GetErrMsg(203),
+		})
+		return
+	}
+
+	// 然后进行OCR处理
 	resultChan := make(chan int)
 	wg.Add(1)
 	ocrQueue <- ocrRequest{aid: aid, examID: Uploader.ExamID, fileHeaders: files, resultChan: resultChan}
@@ -120,19 +133,10 @@ func CreateAnswerSheet(c *gin.Context) {
 	close(resultChan)
 
 	if code != 200 {
-		dao.DeleteAnswerSheet(aid)
+		// OCR失败，但不删除答题卡，只标记OCR失败
 		c.JSON(http.StatusOK, gin.H{
 			"code": code,
 			"msg":  utils.GetErrMsg(code),
-		})
-		return
-	}
-
-	err = utils.UploadFiles(files, aid)
-	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"code": 203,
-			"msg":  utils.GetErrMsg(203),
 		})
 		return
 	}

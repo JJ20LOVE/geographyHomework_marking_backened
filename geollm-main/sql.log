@@ -11229,3 +11229,26 @@
 2025/10/16 16:23:45 skipping unsupported element on CT_Object {urn:schemas-microsoft-com:office:office OLEObject}
 2025/10/16 16:23:45 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject tgt: word/embeddings/oleObject1.bin
 2025/10/16 16:23:45 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject tgt: word/embeddings/oleObject2.bin
+2025/10/23 20:12:50 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties tgt: docProps/custom.xml
+2025/10/23 20:12:50 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties tgt: docProps/custom.xml
+2025/10/23 20:12:50 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml tgt: word/../customXml/item1.xml
+2025/10/23 20:12:50 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink tgt: word/https://baike.baidu.com/item/%E6%B9%BF%E5%9C%B0%E7%94%9F%E6%80%81%E7%B3%BB%E7%BB%9F/2031298?fromModule=lemma_inlink
+2025/10/23 20:12:50 skipping unsupported element on CT_Picture {urn:schemas-microsoft-com:vml shapetype}
+2025/10/23 20:12:50 skipping unsupported element on CT_Picture {urn:schemas-microsoft-com:vml shape}
+2025/10/23 20:21:21 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties tgt: docProps/custom.xml
+2025/10/23 20:21:21 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties tgt: docProps/custom.xml
+2025/10/23 20:21:21 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml tgt: word/../customXml/item1.xml
+2025/10/23 20:21:21 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink tgt: word/https://baike.baidu.com/item/%E6%B9%BF%E5%9C%B0%E7%94%9F%E6%80%81%E7%B3%BB%E7%BB%9F/2031298?fromModule=lemma_inlink
+2025/10/23 20:21:21 skipping unsupported element on CT_Picture {urn:schemas-microsoft-com:vml shapetype}
+2025/10/23 20:21:21 skipping unsupported element on CT_Picture {urn:schemas-microsoft-com:vml shape}
+2025/10/23 20:22:15 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties tgt: docProps/custom.xml
+2025/10/23 20:22:15 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties tgt: docProps/custom.xml
+2025/10/23 20:22:15 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml tgt: word/../customXml/item1.xml
+2025/10/23 20:22:15 unsupported relationship type: http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink tgt: word/https://baike.baidu.com/item/%E6%B9%BF%E5%9C%B0%E7%94%9F%E6%80%81%E7%B3%BB%E7%BB%9F/2031298?fromModule=lemma_inlink
+2025/10/23 20:22:15 skipping unsupported element on CT_Picture {urn:schemas-microsoft-com:vml shapetype}
+2025/10/23 20:22:15 skipping unsupported element on CT_Picture {urn:schemas-microsoft-com:vml shape}
+2025/10/23 20:45:33 Endpoint:  does not follow ip address or domain name standards.
+2025/10/23 20:48:15 Endpoint:  does not follow ip address or domain name standards.
+2025/10/23 20:50:43 Endpoint:  does not follow ip address or domain name standards.
+2025/10/23 20:53:12 发送请求失败: Post "https://zer0.top/flask/llm_comment": dial tcp 123.56.41.111:443: connectex: No connection could be made because the target machine actively refused it.
+2025/10/23 21:24:22 发送请求失败: Post "https://zer0.top/flask/llm_comment": dial tcp 123.56.41.111:443: connectex: No connection could be made because the target machine actively refused it.
