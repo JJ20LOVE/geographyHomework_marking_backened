@@ -107,3 +107,12 @@ func GetStudentByClass(classID int) ([]model.Student, int) {
 	}
 	return student, 200
 }
+func GetStudentById(id int) (model.Student, int) {
+	var student model.Student
+	sqlStr := "SELECT * FROM student WHERE id = ?"
+	err := model.Db.Get(&student, sqlStr, id)
+	if err != nil {
+		return model.Student{}, 400
+	}
+	return student, 200
+}

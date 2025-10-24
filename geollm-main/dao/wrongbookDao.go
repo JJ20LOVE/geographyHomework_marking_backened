@@ -87,7 +87,7 @@ func DeleteWrongQuestion(wrongID string) int {
 }
 
 // 通过ID获取错题记录
-func GetWrongQuestionByID(wrongID string) (model.WrongQuestion, int) {
+func GetWrongQuestionByID(wrongID int) (model.WrongQuestion, int) {
 	var wrongQuestion model.WrongQuestion
 	sqlStr := "SELECT * FROM wrongbook WHERE wrong_id = ?"
 
