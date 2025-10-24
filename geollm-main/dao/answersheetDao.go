@@ -234,6 +234,12 @@ func Evaluator(id int) int {
 			//fmt.Printf("%d th Question %s: %s\n", index+1, sections2[i].Questions[j].Number, sections2[i].Questions[j].Content)
 			_, err := model.Db.Exec(sqlStr, result.Score, result.Comment, result.Structure, id, index+1)
 			total += result.Score
+			// 自动添加错题到错题本
+			if result.Score < points[index] { // 如果得分小于满分，说明是错题
+				addWrongQuestionAutomatically(id, index+1, result.Score, points[index],
+					sections2[i].Questions[j].Content, student_answer[index],
+					sections1[i].Questions[j].Content, result.Comment)
+			}
 			index++
 			if err != nil {
 				return 400
@@ -246,6 +252,53 @@ func Evaluator(id int) int {
 		return 400
 	}
 	return 200
+}
+
+// 自动添加错题到错题本
+func addWrongQuestionAutomatically(aid, qid, studentScore, fullScore int,
+	questionText, studentAnswer, correctAnswer, analysis string) {
+
+	// 获取学生ID和考试ID
+	var studentID, examID int
+	err := model.Db.Get(&studentID, "SELECT student_id FROM answersheet WHERE id = ?", aid)
+	if err != nil {
+		fmt.Printf("获取学生ID失败: %v\n", err)
+		return
+	}
+
+	err = model.Db.Get(&examID, "SELECT exam_id FROM answersheet WHERE id = ?", aid)
+	if err != nil {
+		fmt.Printf("获取考试ID失败: %v\n", err)
+		return
+	}
+
+	// 构建错题请求
+	wrongQuestion := model.WrongQuestionRequest{
+		StudentID:      studentID,
+		ExamID:         examID,
+		QuestionID:     qid,
+		QuestionText:   questionText,
+		StudentAnswer:  studentAnswer,
+		CorrectAnswer:  correctAnswer,
+		Analysis:       analysis,
+		KnowledgePoint: extractKnowledgePoint(questionText), // 需要实现这个函数
+	}
+
+	// 调用现有的添加错题函数
+	code := AddWrongQuestion(wrongQuestion)
+	if code != 200 {
+		fmt.Printf("自动添加错题失败，错误码: %d\n", code)
+	} else {
+		fmt.Printf("成功添加错题: 学生ID=%d, 考试ID=%d, 题目ID=%d\n", studentID, examID, qid)
+	}
+}
+
+// 从题目文本中提取知识点（简化版本，你可以根据实际情况完善）
+func extractKnowledgePoint(questionText string) string {
+	// 这里可以调用你的AI服务来提取知识点
+	// 或者使用简单的关键词匹配
+	// 暂时返回空字符串，你可以根据需求完善这个逻辑
+	return ""
 }
 
 func GetAnswerSheetInfo(aid int) (model.AnswerSheetInfo, int) {
@@ -274,22 +327,26 @@ func GetAnswerSheetInfo(aid int) (model.AnswerSheetInfo, int) {
 	ASI.PicUrls, _ = utils.GetFileUrl(ASI.AnswerSheet.ID, 0, examType)
 	return ASI, 200
 }
-
 func BatchEvaluator(exam_id, class_id string, is_skip int) int {
 	sqlStr := "SELECT id FROM answersheet WHERE (exam_id = ? OR ? = '') AND student_id IN (SELECT id FROM student WHERE (class_id = ? OR ? = ''))"
 	if is_skip == 1 {
 		sqlStr = "SELECT id FROM answersheet WHERE (exam_id = ? OR ? = '') AND student_id IN (SELECT id FROM student WHERE (class_id = ? OR ? = '')) AND is_eva = FALSE"
 	}
+
 	var ids []int
 	err := model.Db.Select(&ids, sqlStr, exam_id, exam_id, class_id, class_id)
 	if err != nil {
 		return 400
 	}
+
+	successCount := 0
 	for _, id := range ids {
-		code := Evaluator(id)
-		if code != 200 {
-			return code
+		code := Evaluator(id) // 这个函数现在会自动添加错题
+		if code == 200 {
+			successCount++
 		}
 	}
+
+	fmt.Printf("批量评分完成: 总计%d份，成功%d份\n", len(ids), successCount)
 	return 200
 }

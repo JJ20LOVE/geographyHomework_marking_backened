@@ -7,23 +7,40 @@ import (
 
 // 添加错题记录
 func AddWrongQuestion(wq model.WrongQuestionRequest) int {
+	// 参数验证
+	if wq.StudentID == 0 || wq.ExamID == 0 || wq.QuestionID == 0 {
+		fmt.Println("添加错题失败: 参数不完整")
+		return 300
+	}
 
-	//检查是否已存在相同的错题记录
+	// 检查是否已存在相同的错题记录
 	sqlStr := "SELECT wrong_id FROM wrongbook WHERE student_id = ? AND exam_id = ? AND question_id = ?"
 	var existingID int
 	err := model.Db.Get(&existingID, sqlStr, wq.StudentID, wq.ExamID, wq.QuestionID)
+
 	if err == nil {
-		//记录已存在，更新它
+		// 记录已存在，更新它
+		fmt.Printf("错题已存在，更新记录: wrong_id=%d\n", existingID)
 		return UpdateWrongQuestion(existingID, wq)
 	}
 
-	//插入新记录
-	sqlStr = "INSERT INTO wrongbook (student_id, exam_id, question_id, question_text, student_answer, correct_answer, analysis, knowledge_point) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err = model.Db.Exec(sqlStr, wq.StudentID, wq.ExamID, wq.QuestionID, wq.QuestionText, wq.StudentAnswer, wq.CorrectAnswer, wq.Analysis, wq.KnowledgePoint)
+	// 插入新记录
+	sqlStr = `INSERT INTO wrongbook 
+        (student_id, exam_id, question_id, question_text, student_answer, correct_answer, analysis, knowledge_point) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+
+	_, err = model.Db.Exec(sqlStr,
+		wq.StudentID, wq.ExamID, wq.QuestionID,
+		wq.QuestionText, wq.StudentAnswer, wq.CorrectAnswer,
+		wq.Analysis, wq.KnowledgePoint)
+
 	if err != nil {
-		fmt.Println("AddWrongQuestion error:%v\n", err)
+		fmt.Printf("AddWrongQuestion 数据库错误: %v\n", err)
 		return 400
 	}
+
+	fmt.Printf("成功添加新错题记录: 学生ID=%d, 考试ID=%d, 题目ID=%d\n",
+		wq.StudentID, wq.ExamID, wq.QuestionID)
 	return 200
 }
 
@@ -97,4 +114,17 @@ func GetWrongQuestionByID(wrongID int) (model.WrongQuestion, int) {
 	}
 
 	return wrongQuestion, 200
+}
+
+// 批量增加错题
+func BatchAddWrongQuestions(aid int, wrongQuestions []model.WrongQuestionRequest) int {
+	successCount := 0
+	for _, wq := range wrongQuestions {
+		code := AddWrongQuestion(wq)
+		if code == 200 {
+			successCount++
+		}
+	}
+	fmt.Printf("批量添加错题完成: 总计%d个，成功%d个\n", len(wrongQuestions), successCount)
+	return 200
 }
