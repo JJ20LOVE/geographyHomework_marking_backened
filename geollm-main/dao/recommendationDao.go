@@ -18,7 +18,7 @@ func init() {
 }
 
 // 获取同类题
-func GetSimilarQuestions(wrongID string, limit int) ([]model.SimilarQuestion, int) {
+func GetSimilarQuestions(wrongID int, limit int) ([]model.SimilarQuestion, int) {
 	// 获取错题信息
 	wrongQuestion, code := GetWrongQuestionByID(wrongID)
 	if code != 200 {

@@ -4,9 +4,11 @@ import (
 	"dbdemo/dao"
 	"dbdemo/model"
 	"dbdemo/utils"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 func GetAllStudent(c *gin.Context) {
@@ -22,6 +24,23 @@ func GetAllStudent(c *gin.Context) {
 		"code": 200,
 		"msg":  utils.GetErrMsg(200),
 		"data": students,
+	})
+}
+
+func GetStudentById(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Query("id"))
+	student, code := dao.GetStudentById(id)
+	fmt.Print(student)
+	if code != 200 {
+		c.JSON(http.StatusOK, gin.H{
+			"code": code,
+			"msg":  utils.GetErrMsg(code),
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": student,
+		"msg":  "success",
 	})
 }
 
